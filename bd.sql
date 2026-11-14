@@ -1,0 +1,15 @@
+-- =====================================================
+-- bd.sql - Banco de dados do Cineflix
+-- (arquivo ainda vazio: o grupo do banco vai preencher)
+-- =====================================================
+--
+-- Nomes que o PHP já está usando (o banco precisa ter igual):
+--
+-- Banco: catalogo_filmes
+--
+-- Tabela usuarios: id, usuario, senha (senha em bcrypt)
+-- Tabela diretores: id, nome, pais, genero, imagem
+-- Tabela filmes: id, diretor_id (chave estrangeira de diretores.id),
+--                titulo, ano, genero, trailer_link, sinopse, imagem_poster
+--
+-- Usuário de teste (admin / 123): o hash vem de rodar geraSenha.php

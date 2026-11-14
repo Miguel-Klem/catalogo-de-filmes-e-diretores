@@ -1,62 +1,60 @@
 <?php
-session_start();
-if (!isset($_SESSION['usuario'])) {
-    header('Location: login.php');
-    exit;
-}
+/*
+ * ARQUIVO: index.php
+ * FUNÇÃO: menu principal (primeira página depois do login)
+ */
+include('valida_sessao.php');
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página Principal - Possivel nome</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Menu Principal — Cineflix</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
+    <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
+<div class="conteudo">
 
-<!-- Barra Superior -->
-<nav class="navbar navbar-dark bg-dark px-4">
-    <span class="navbar-brand">Vai ter um nome ai</span>
-    <div class="d-flex align-items-center gap-3">
-        <span class="text-white">Olá, <strong><?= htmlspecialchars($_SESSION['usuario']) ?></strong>!</span>
-        <a href="logout.php" class="btn btn-outline-danger btn-sm">Sair</a>
+    <div class="barra-topo">
+        <a href="logout.php" class="botao-voltar">🚪 Sair</a>
     </div>
-</nav>
 
-<!-- Grade de Navegação -->
-<div class="container my-5">
-    <h2 class="mb-4">Painel Principal</h2>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card h-100 text-center shadow-sm">
-                <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                    <h4 class="card-title">Gerenciar Diretores</h4>
-                    <p class="card-text text-muted">Cadastre e edite os Diretores cadastrados no sistema.</p>
-                    <a href="diretores.php" class="btn btn-primary mt-auto">Acessar</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 text-center shadow-sm">
-                <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                    <h4 class="card-title">Cadastrar Filmes</h4>
-                    <p class="card-text text-muted">Adicione novos filmes, links do YouTube para trailers.</p>
-                    <a href="filmes.php" class="btn btn-primary mt-auto">Acessar</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 text-center shadow-sm">
-                <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                    <h4 class="card-title">Biblioteca</h4>
-                    <p class="card-text text-muted">Consulte e filtre todas os filmes do acervo.</p>
-                    <a href="bibilioteca.php" class="btn btn-primary mt-auto">Acessar</a>
-                </div>
-            </div>
-        </div>
+    <div class="cabecalho-pagina">
+        <h1>🎬 CINEFLIX</h1>
+        <!-- htmlspecialchars protege contra XSS ao mostrar o nome -->
+        <p>Olá, <strong><?php echo htmlspecialchars($_SESSION['usuario']); ?></strong>! O que deseja fazer?</p>
     </div>
+
+    <div class="grade-menu">
+
+        <div class="cartao-menu">
+            <a href="cadastro_diretor.php">
+                <div class="icone-menu">🎥</div>
+                <div class="titulo-menu">Gerenciar Diretores</div>
+                <div class="descricao-menu">Cadastre e edite diretores</div>
+            </a>
+        </div>
+
+        <div class="cartao-menu">
+            <a href="cadastro_filme.php">
+                <div class="icone-menu">🎞️</div>
+                <div class="titulo-menu">Cadastrar Filmes</div>
+                <div class="descricao-menu">Adicione filmes ao sistema</div>
+            </a>
+        </div>
+
+        <div class="cartao-menu">
+            <a href="biblioteca.php">
+                <div class="icone-menu">🍿</div>
+                <div class="titulo-menu">Biblioteca de Filmes</div>
+                <div class="descricao-menu">Veja e filtre todos os filmes</div>
+            </a>
+        </div>
+
+    </div>
+
 </div>
-
 </body>
 </html>
