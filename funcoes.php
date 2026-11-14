@@ -51,7 +51,5 @@ function redimensionarESalvarImagem(array $arquivo, $largura = 300, $altura = 30
         imagejpeg($nova, $caminho, 90);
     }
 
-    imagedestroy($original);
-    imagedestroy($nova);
     return $caminho;
 }
