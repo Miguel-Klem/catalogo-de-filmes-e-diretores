@@ -1,13 +1,6 @@
 <?php
-/*
- * ARQUIVO: cadastro_diretor.php
- * FUNÇÃO: CRUD de diretores (cadastrar, listar, editar e excluir)
- *
- *   C (criar)   → POST sem id          → INSERT
- *   R (ler)     → SELECT ao abrir      → tabela no final da página
- *   U (editar)  → POST com id          → UPDATE
- *   D (excluir) → GET ?excluir_id=X    → DELETE
- */
+// cadastro_diretor.php
+// cadastrar, listar, editar e excluir diretores (CRUD)
 include('valida_sessao.php');
 include('conexao.php');
 include('funcoes.php');
@@ -15,30 +8,28 @@ include('funcoes.php');
 $mensagem = null;
 $classe = null;
 
-// -----------------------------------------------
-// CRIAR / EDITAR
-// -----------------------------------------------
+// cadastrar e editar
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id = $_POST['id'] ?? '';
     $nome = $_POST['nome'] ?? '';
     $pais = $_POST['pais'] ?? '';
     $genero = $_POST['genero'] ?? '';
 
-    // Se mandou foto, redimensiona e salva
+    // se enviou foto, redimensiona e salva
     $imagem = "";
     if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == 0) {
         $upload = redimensionarESalvarImagem($_FILES['imagem']);
         if (str_starts_with($upload, 'img/')) {
             $imagem = $upload;
         } else {
-            $mensagem = $upload; // veio uma mensagem de erro
+            $mensagem = $upload; // aqui $upload é a mensagem de erro
             $classe = "erro";
         }
     }
 
     if (!isset($classe)) {
         if ($id) {
-            // EDITAR: só troca a foto se enviou uma nova
+            // editar (só troca a foto se enviou uma nova)
             $sql = "UPDATE diretores SET nome=?, pais=?, genero=?";
             $parametros = [$nome, $pais, $genero];
             if ($imagem) {
@@ -49,12 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $parametros[] = intval($id);
 
             $comando = $conexao->prepare($sql);
-            // todos "s" (texto) e o último "i" (inteiro, o id)
+            // "s" para texto e "i" para o id no final
             $tipos = str_repeat('s', count($parametros) - 1) . 'i';
             $comando->bind_param($tipos, ...$parametros);
             $mensagem = "Diretor atualizado com sucesso!";
         } else {
-            // CRIAR
+            // cadastrar
             $comando = $conexao->prepare("INSERT INTO diretores (nome, pais, genero, imagem) VALUES (?,?,?,?)");
             $comando->bind_param("ssss", $nome, $pais, $genero, $imagem);
             $mensagem = "Diretor cadastrado com sucesso!";
@@ -70,13 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// -----------------------------------------------
-// EXCLUIR
-// -----------------------------------------------
+// excluir
 if (isset($_GET['excluir_id'])) {
     $id = intval($_GET['excluir_id']);
 
-    // Regra de negócio: não pode excluir diretor que tem filmes
+    // não deixa excluir diretor que tem filmes
     $verifica = $conexao->prepare("SELECT COUNT(*) AS total FROM filmes WHERE diretor_id = ?");
     $verifica->bind_param("i", $id);
     $verifica->execute();
@@ -100,9 +89,7 @@ if (isset($_GET['excluir_id'])) {
     }
 }
 
-// -----------------------------------------------
-// LER (diretor que está sendo editado + lista da tabela)
-// -----------------------------------------------
+// buscar os dados para a tela
 $diretor = null;
 if (isset($_GET['editar_id'])) {
     $editar_id = intval($_GET['editar_id']);
@@ -122,7 +109,7 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $diretor ? 'Editar Diretor' : 'Novo Diretor'; ?> — Cineflix</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
-    <link rel="stylesheet" href="estilos.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="conteudo">
@@ -140,10 +127,10 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
         </div>
     <?php endif; ?>
 
-    <!-- enctype="multipart/form-data" é obrigatório para enviar arquivo -->
+    <!-- enctype é obrigatório para enviar arquivo -->
     <form method="post" action="" enctype="multipart/form-data">
 
-        <!-- campo escondido: guarda o id quando estamos editando -->
+        <!-- guarda o id quando está editando -->
         <input type="hidden" name="id" value="<?php echo $diretor['id'] ?? ''; ?>">
 
         <div class="grade-formulario">
@@ -194,7 +181,7 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
         </div>
     </form>
 
-    <!-- TABELA DE DIRETORES -->
+    <!-- tabela de diretores -->
     <h3>📋 Diretores Cadastrados</h3>
 
     <div class="tabela-container">
@@ -218,7 +205,7 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
                                          alt="<?php echo htmlspecialchars($linha['nome']); ?>"
                                          class="miniatura">
                                 <?php else: ?>
-                                    <!-- sem foto: mostra um emoji no lugar -->
+                                    <!-- sem foto: mostra um emoji -->
                                     <div class="sem-imagem">👤</div>
                                 <?php endif; ?>
                             </td>

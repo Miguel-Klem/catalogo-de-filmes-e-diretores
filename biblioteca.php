@@ -1,13 +1,6 @@
 <?php
-/*
- * ARQUIVO: biblioteca.php
- * FUNÇÃO: Biblioteca de Filmes (listar e filtrar)
- *
- * Filtros que podem ser usados juntos:
- *   - Busca geral (título ou diretor)
- *   - Diretor
- *   - Gênero
- */
+// biblioteca.php
+// lista todos os filmes com filtro por busca, diretor e gênero
 include('valida_sessao.php');
 include('conexao.php');
 include('funcoes.php');
@@ -15,11 +8,8 @@ include('funcoes.php');
 $mensagem = null;
 $tipo_mensagem = null;
 
-// -----------------------------------------------
-// MONTAGEM DOS FILTROS
-// -----------------------------------------------
-// Começa com "1=1" (sempre verdadeiro) para poder ir colocando AND
-// sem precisar descobrir qual é o primeiro filtro.
+// filtros da busca
+// começa com 1=1 (sempre verdadeiro) pra poder ir colocando AND nos filtros
 $onde = "1=1";
 $parametros = [];
 $tipos = "";
@@ -44,18 +34,16 @@ if (!empty($_GET['busca'])) {
     $tipos .= "ss";
 }
 
-// Texto com os filtros atuais, para não perder a busca ao excluir um filme
+// guarda os filtros atuais pra não perder a busca ao excluir ou ver detalhes
 $manter_filtros = "busca=" . urlencode($_GET['busca'] ?? '')
                 . "&diretor=" . urlencode($_GET['diretor'] ?? '')
                 . "&genero=" . urlencode($_GET['genero'] ?? '');
 
-// Listas dos selects de filtro
+// listas dos selects
 $diretores = $conexao->query("SELECT id, nome FROM diretores ORDER BY nome");
 $generos = $conexao->query("SELECT DISTINCT genero FROM filmes WHERE genero != '' ORDER BY genero");
 
-// -----------------------------------------------
-// EXCLUIR
-// -----------------------------------------------
+// excluir
 if (isset($_GET['excluir_id'])) {
     $id = intval($_GET['excluir_id']);
 
@@ -81,9 +69,7 @@ if (isset($_GET['excluir_id'])) {
     $comando->close();
 }
 
-// -----------------------------------------------
-// DETALHES (sinopse do filme escolhido)
-// -----------------------------------------------
+// detalhes do filme (sinopse)
 $detalhes = null;
 if (isset($_GET['detalhes_id'])) {
     $detalhes_id = intval($_GET['detalhes_id']);
@@ -94,10 +80,8 @@ if (isset($_GET['detalhes_id'])) {
     $comando->close();
 }
 
-// -----------------------------------------------
-// CONSULTA PRINCIPAL
-// -----------------------------------------------
-// O JOIN junta filmes com diretores para trazer o nome do diretor
+// consulta principal
+// o JOIN junta filmes com diretores pra pegar o nome do diretor
 $sql = "SELECT f.*, d.nome AS diretor_nome
         FROM filmes f
         JOIN diretores d ON f.diretor_id = d.id
@@ -105,13 +89,13 @@ $sql = "SELECT f.*, d.nome AS diretor_nome
         ORDER BY d.nome, f.titulo";
 
 if (!empty($parametros)) {
-    // Com filtros: consulta preparada
+    // com filtros: consulta preparada
     $comando = $conexao->prepare($sql);
-    $comando->bind_param($tipos, ...$parametros); // ... espalha o array nos parâmetros
+    $comando->bind_param($tipos, ...$parametros); // ... espalha o array
     $comando->execute();
     $filmes = $comando->get_result();
 } else {
-    // Sem filtros: consulta simples
+    // sem filtros: consulta simples
     $filmes = $conexao->query($sql);
 }
 ?>
@@ -122,7 +106,7 @@ if (!empty($parametros)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biblioteca de Filmes — Cineflix</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
-    <link rel="stylesheet" href="estilos.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="conteudo">
@@ -135,7 +119,7 @@ if (!empty($parametros)) {
         </div>
     </div>
 
-    <!-- FILTROS (method="get" deixa a busca na URL) -->
+    <!-- filtros (get deixa a busca na URL) -->
     <div class="filtros">
         <form method="get" class="formulario-filtros">
             <div class="grupo-filtros">
@@ -198,7 +182,7 @@ if (!empty($parametros)) {
         </div>
     <?php endif; ?>
 
-    <!-- TABELA DE FILMES -->
+    <!-- tabela de filmes -->
     <div class="tabela-container">
         <table>
             <thead>
@@ -231,11 +215,11 @@ if (!empty($parametros)) {
                             <td>
                                 <div class="botoes-acao">
                                     <?php
-                                    // Monta o link do trailer a partir do ID do vídeo
+                                    // monta o link do trailer com o id do vídeo
                                     $id_video = pegarIdYoutube($linha['trailer_link'] ?? '');
                                     if ($id_video):
                                     ?>
-                                        <!-- target="_blank" abre em outra aba -->
+                                        <!-- _blank abre em outra aba -->
                                         <a href="https://www.youtube.com/watch?v=<?php echo $id_video; ?>"
                                            target="_blank" rel="noopener noreferrer"
                                            class="botao-trailer">▶ Trailer</a>

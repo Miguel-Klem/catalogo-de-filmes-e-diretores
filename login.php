@@ -1,14 +1,6 @@
 <?php
-/*
- * ARQUIVO: login.php
- * FUNÇÃO: entrar no sistema
- *
- * Passo a passo:
- * 1. Se já está logado, vai direto para o index.php
- * 2. Se enviou o formulário, confere usuário e senha no banco
- * 3. Se deu certo, guarda o usuário na sessão e vai para o index.php
- * 4. Se deu errado, mostra a mensagem de erro
- */
+// login.php
+// se já está logado vai pro index.php, senão confere usuário e senha no banco
 session_start();
 
 if (isset($_SESSION['usuario'])) {
@@ -29,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $mensagem = "Preencha todos os campos.";
         $tipo_mensagem = "erro";
     } else {
-        // Consulta preparada: o ? é trocado com segurança (evita SQL Injection)
+        // ? é trocado pelo valor com segurança (evita SQL Injection)
         $comando = $conexao->prepare("SELECT * FROM usuarios WHERE usuario = ?");
         $comando->bind_param("s", $usuario);
         $comando->execute();
@@ -38,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($resultado->num_rows > 0) {
             $linha = $resultado->fetch_assoc();
 
-            // Compara a senha digitada com o hash bcrypt que está no banco
+            // compara a senha digitada com o hash que está no banco
             if (password_verify($senha, $linha['senha'])) {
                 $_SESSION['usuario'] = $usuario;
                 $_SESSION['usuario_id'] = $linha['id'];
@@ -63,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — Cineflix</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
-    <link rel="stylesheet" href="estilos.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="pagina-login">
 
@@ -83,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="mensagem sucesso">✅ Você saiu do sistema.</div>
         <?php endif; ?>
 
-        <!-- method="post": os dados não aparecem na URL -->
+        <!-- post: os dados não aparecem na URL -->
         <form method="post" action="">
             <div class="grupo-campo">
                 <label for="usuario">Usuário</label>

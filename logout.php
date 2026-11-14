@@ -1,19 +1,16 @@
 <?php
-/*
- * ARQUIVO: logout.php
- * FUNÇÃO: sair do sistema (encerrar a sessão)
- */
+// logout.php - sair do sistema
 session_start();
 
-// Limpa tudo que estava guardado na sessão
+// limpa a sessão
 $_SESSION = array();
 
-// Apaga o cookie da sessão no navegador
+// apaga o cookie da sessão
 if (isset($_COOKIE[session_name()])) {
     setcookie(session_name(), '', time() - 42000, '/');
 }
 
-// Destrói a sessão no servidor e volta para o login
+// destrói a sessão e volta pro login
 session_destroy();
 header('Location: login.php?logout=sucesso');
 exit();

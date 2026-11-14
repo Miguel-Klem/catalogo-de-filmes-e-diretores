@@ -1,11 +1,6 @@
 <?php
-/*
- * ARQUIVO: cadastro_filme.php
- * FUNÇÃO: CRUD de filmes (cada filme pertence a um diretor)
- *
- * O diretor_id é a chave estrangeira: liga o filme ao diretor.
- * O link do trailer é validado antes de salvar.
- */
+// cadastro_filme.php
+// CRUD de filmes. O diretor_id liga o filme ao diretor (chave estrangeira)
 include('valida_sessao.php');
 include('conexao.php');
 include('funcoes.php');
@@ -13,9 +8,7 @@ include('funcoes.php');
 $mensagem = null;
 $classe = null;
 
-// -----------------------------------------------
-// CRIAR / EDITAR
-// -----------------------------------------------
+// cadastrar e editar
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id = $_POST['id'] ?? '';
     $diretor_id = $_POST['diretor_id'] ?? '';
@@ -25,17 +18,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $sinopse = $_POST['sinopse'] ?? '';
     $trailer_link = $_POST['trailer_link'] ?? '';
 
-    // Ano vazio vira NULL, porque a coluna ano é número e não aceita texto vazio
+    // ano vazio vira NULL (a coluna é número e não aceita texto vazio)
     if ($ano === '') {
         $ano = null;
     }
 
-    // Validação do link do trailer
+    // valida o link do trailer
     if (empty(pegarIdYoutube($trailer_link))) {
         $mensagem = "Insira um link válido do YouTube (ex: https://www.youtube.com/watch?v=...).";
         $classe = "erro";
     } else {
-        // Upload do pôster (se enviou)
+        // upload do pôster (se enviou)
         $imagem_poster = "";
         if (isset($_FILES['imagem_poster']) && $_FILES['imagem_poster']['error'] == 0) {
             $upload = redimensionarESalvarImagem($_FILES['imagem_poster']);
@@ -49,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if (!isset($classe)) {
             if ($id) {
-                // EDITAR: só troca o pôster se enviou um novo
+                // editar (só troca o pôster se enviou um novo)
                 $sql = "UPDATE filmes SET diretor_id=?, titulo=?, ano=?, genero=?, sinopse=?, trailer_link=?";
                 $parametros = [$diretor_id, $titulo, $ano, $genero, $sinopse, $trailer_link];
                 if ($imagem_poster) {
@@ -64,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $comando->bind_param($tipos, ...$parametros);
                 $mensagem = "Filme atualizado com sucesso!";
             } else {
-                // CRIAR
+                // cadastrar
                 $comando = $conexao->prepare("INSERT INTO filmes (diretor_id, titulo, ano, genero, sinopse, trailer_link, imagem_poster) VALUES (?,?,?,?,?,?,?)");
                 $comando->bind_param("sssssss", $diretor_id, $titulo, $ano, $genero, $sinopse, $trailer_link, $imagem_poster);
                 $mensagem = "Filme cadastrado com sucesso!";
@@ -81,9 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// -----------------------------------------------
-// EXCLUIR (apaga também o arquivo do pôster)
-// -----------------------------------------------
+// excluir (apaga o pôster da pasta img também)
 if (isset($_GET['excluir_id'])) {
     $id = intval($_GET['excluir_id']);
 
@@ -93,7 +84,7 @@ if (isset($_GET['excluir_id'])) {
     $arquivo = $comando->get_result()->fetch_assoc();
     $comando->close();
 
-    // unlink() apaga o arquivo da pasta img/
+    // unlink apaga o arquivo da pasta img
     if ($arquivo && !empty($arquivo['imagem_poster']) && file_exists($arquivo['imagem_poster'])) {
         unlink($arquivo['imagem_poster']);
     }
@@ -110,11 +101,9 @@ if (isset($_GET['excluir_id'])) {
     $comando->close();
 }
 
-// -----------------------------------------------
-// LER
-// -----------------------------------------------
+// buscar os dados para a tela
 
-// Filme que está sendo editado
+// filme que está sendo editado
 $filme = null;
 if (isset($_GET['editar_id'])) {
     $editar_id = intval($_GET['editar_id']);
@@ -125,7 +114,7 @@ if (isset($_GET['editar_id'])) {
     $comando->close();
 }
 
-// Filme que o usuário quer ver os detalhes (sinopse)
+// filme que vai mostrar os detalhes
 $detalhes = null;
 if (isset($_GET['detalhes_id'])) {
     $detalhes_id = intval($_GET['detalhes_id']);
@@ -136,10 +125,10 @@ if (isset($_GET['detalhes_id'])) {
     $comando->close();
 }
 
-// Lista de diretores para o select do formulário
+// diretores para o select do formulário
 $diretores = $conexao->query("SELECT id, nome FROM diretores ORDER BY nome");
 
-// Se veio de "Filmes" na tela de diretores, mostra só os filmes dele
+// se veio do botão "Filmes" da tela de diretores, mostra só os filmes dele
 $diretor_id_filtro = isset($_GET['diretor_id']) ? intval($_GET['diretor_id']) : ($filme['diretor_id'] ?? null);
 
 $sql_lista = "SELECT f.*, d.nome AS diretor_nome FROM filmes f JOIN diretores d ON f.diretor_id = d.id";
@@ -160,7 +149,7 @@ if ($diretor_id_filtro) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $filme ? 'Editar Filme' : 'Novo Filme'; ?> — Cineflix</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
-    <link rel="stylesheet" href="estilos.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="conteudo">
@@ -179,7 +168,7 @@ if ($diretor_id_filtro) {
         </div>
     <?php endif; ?>
 
-    <!-- Caixa com a sinopse (aparece quando clica em Detalhes) -->
+    <!-- sinopse (aparece quando clica em Detalhes) -->
     <?php if ($detalhes): ?>
         <div class="caixa-sinopse">
             <h3>🎬 <?php echo htmlspecialchars($detalhes['titulo']); ?></h3>
@@ -267,7 +256,7 @@ if ($diretor_id_filtro) {
         </div>
     </form>
 
-    <!-- TABELA DE FILMES -->
+    <!-- tabela de filmes -->
     <h3>📋 Filmes Cadastrados</h3>
 
     <div class="tabela-container">

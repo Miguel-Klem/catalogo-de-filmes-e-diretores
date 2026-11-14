@@ -1,16 +1,11 @@
 <?php
-/*
- * ARQUIVO: funcoes.php
- * FUNÇÃO: funções que mais de uma página usa
- * (assim não precisamos copiar o mesmo código em vários arquivos)
- */
+// funcoes.php
+// funções usadas em mais de uma página, pra não copiar o código toda hora
 
-// -----------------------------------------------
-// Pega o ID do vídeo a partir do link do YouTube
-// Usado para validar o link do trailer
-// -----------------------------------------------
+// pega o id do vídeo no link do YouTube
+// (serve pra validar o link do trailer)
 function pegarIdYoutube(string $link) {
-    // Cada item é um formato de link diferente do YouTube
+    // formatos de link do YouTube
     $padroes = [
         '/youtube\.com\/watch\?v=([^\&\?\/]+)/',
         '/youtube\.com\/embed\/([^\&\?\/]+)/',
@@ -19,28 +14,26 @@ function pegarIdYoutube(string $link) {
     ];
 
     foreach ($padroes as $padrao) {
-        // preg_match testa se o link bate com o padrão
+        // preg_match testa se o link bate com o formato
         if (preg_match($padrao, $link, $achados)) {
             return $achados[1];
         }
     }
-    return ""; // não achou nenhum ID: link inválido
+    return ""; // link inválido
 }
 
-// -----------------------------------------------
-// Valida, redimensiona (biblioteca GD) e salva a imagem na pasta img/
-// Devolve o caminho da imagem se deu certo, ou a mensagem de erro
-// -----------------------------------------------
+// valida, redimensiona (GD) e salva a imagem na pasta img
+// devolve o caminho da imagem ou a mensagem de erro
 function redimensionarESalvarImagem(array $arquivo, $largura = 300, $altura = 300) {
     $caminho = "img/" . uniqid() . '_' . basename($arquivo["name"]);
     $tipo = strtolower(pathinfo($caminho, PATHINFO_EXTENSION));
 
-    // Validações básicas
+    // validações
     if (!getimagesize($arquivo["tmp_name"])) return "Arquivo não é uma imagem válida.";
     if ($arquivo["size"] > 5000000) return "Imagem muito grande. Máximo: 5 MB.";
     if (!in_array($tipo, ["jpg", "jpeg", "png"])) return "Apenas JPG e PNG são aceitos.";
 
-    // Abre a imagem original e calcula o novo tamanho mantendo a proporção
+    // calcula o tamanho novo mantendo a proporção
     $original = imagecreatefromstring(file_get_contents($arquivo["tmp_name"]));
     $largura_original = imagesx($original);
     $altura_original = imagesy($original);
@@ -48,7 +41,7 @@ function redimensionarESalvarImagem(array $arquivo, $largura = 300, $altura = 30
     $nova_largura = (int)($largura_original * $proporcao);
     $nova_altura = (int)($altura_original * $proporcao);
 
-    // Cria a imagem nova, menor, e salva
+    // cria a imagem menor e salva
     $nova = imagecreatetruecolor($nova_largura, $nova_altura);
     imagecopyresampled($nova, $original, 0, 0, 0, 0, $nova_largura, $nova_altura, $largura_original, $altura_original);
 

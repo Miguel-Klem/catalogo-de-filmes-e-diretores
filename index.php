@@ -1,8 +1,5 @@
 <?php
-/*
- * ARQUIVO: index.php
- * FUNÇÃO: menu principal (primeira página depois do login)
- */
+// index.php - menu principal
 include('valida_sessao.php');
 ?>
 <!DOCTYPE html>
@@ -12,7 +9,7 @@ include('valida_sessao.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu Principal — Cineflix</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
-    <link rel="stylesheet" href="estilos.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="conteudo">
@@ -23,7 +20,7 @@ include('valida_sessao.php');
 
     <div class="cabecalho-pagina">
         <h1>🎬 CINEFLIX</h1>
-        <!-- htmlspecialchars protege contra XSS ao mostrar o nome -->
+        <!-- htmlspecialchars protege contra XSS -->
         <p>Olá, <strong><?php echo htmlspecialchars($_SESSION['usuario']); ?></strong>! O que deseja fazer?</p>
     </div>
 

@@ -1,11 +1,6 @@
 <?php
-/*
- * ARQUIVO: conexao.php
- * FUNÇÃO: conectar o PHP ao banco de dados MySQL
- *
- * Todas as páginas que mexem no banco incluem este arquivo.
- * Ele cria a variável $conexao, que usamos nas consultas SQL.
- */
+// conexao com o banco de dados
+// as outras páginas dão include nesse arquivo e usam a variável $conexao
 
 // Dados do banco (mudar conforme o computador de cada um)
 $servidor = "localhost";
