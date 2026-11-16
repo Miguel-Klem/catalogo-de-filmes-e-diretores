@@ -1,12 +1,9 @@
 <?php
-// conexao com o banco de dados
-// as outras páginas dão include nesse arquivo e usam a variável $conexao
-
-// Dados do banco (mudar conforme o computador de cada um)
+// Dados do banco
 $servidor = "localhost";
 $usuario_bd = "root";
 $senha_bd = "Senai@118";
-$nome_banco = "catalogo_filmes";
+$nome_banco = "cinema_senai";
 
 // Criando a conexão com mysqli
 $conexao = new mysqli($servidor, $usuario_bd, $senha_bd, $nome_banco);
@@ -16,7 +13,7 @@ if ($conexao->connect_error) {
     die("Falha na conexão: " . $conexao->connect_error);
 }
 
-// utf8mb4 deixa aparecer acentos e emojis certinho
+// utf8mb4 - Permite acentuação e emojis
 $conexao->set_charset("utf8mb4");
 
 // Cria a pasta img (onde ficam os pôsteres e fotos) se ela ainda não existir

@@ -1,13 +1,16 @@
 <?php
-// index.php - menu principal
+
+// Menu principal
 include('valida_sessao.php');
+
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Principal — Cineflix</title>
+    <title>Menu Principal - Cineflix</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -20,7 +23,8 @@ include('valida_sessao.php');
 
     <div class="cabecalho-pagina">
         <h1>🎬 CINEFLIX</h1>
-        <!-- htmlspecialchars protege contra XSS -->
+        
+        <!-- htmlspecialchars: Não permite que pessoas injetem códigos na página (XSS) -->
         <p>Olá, <strong><?php echo htmlspecialchars($_SESSION['usuario']); ?></strong>! O que deseja fazer?</p>
     </div>
 

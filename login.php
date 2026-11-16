@@ -1,6 +1,5 @@
 <?php
-// login.php
-// se já está logado vai pro index.php, senão confere usuário e senha no banco
+// Se já está logado vai pro index.php, senão confere usuário e senha no banco
 session_start();
 
 if (isset($_SESSION['usuario'])) {
@@ -21,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $mensagem = "Preencha todos os campos.";
         $tipo_mensagem = "erro";
     } else {
+
         // ? é trocado pelo valor com segurança (evita SQL Injection)
         $comando = $conexao->prepare("SELECT * FROM usuarios WHERE usuario = ?");
         $comando->bind_param("s", $usuario);
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($resultado->num_rows > 0) {
             $linha = $resultado->fetch_assoc();
 
-            // compara a senha digitada com o hash que está no banco
+            // Compara a senha digitada com o hash que está no banco
             if (password_verify($senha, $linha['senha'])) {
                 $_SESSION['usuario'] = $usuario;
                 $_SESSION['usuario_id'] = $linha['id'];
@@ -47,7 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $comando->close();
     }
 }
+
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -75,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="mensagem sucesso">✅ Você saiu do sistema.</div>
         <?php endif; ?>
 
-        <!-- post: os dados não aparecem na URL -->
+        <!-- Os dados não aparecem na URL -->
         <form method="post" action="">
             <div class="grupo-campo">
                 <label for="usuario">Usuário</label>

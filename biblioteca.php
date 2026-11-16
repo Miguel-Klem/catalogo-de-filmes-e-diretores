@@ -1,6 +1,6 @@
 <?php
-// biblioteca.php
-// lista todos os filmes com filtro por busca, diretor e gênero
+
+// Lista todos os filmes com filtro por busca, diretor e gênero
 include('valida_sessao.php');
 include('conexao.php');
 include('funcoes.php');
@@ -8,7 +8,7 @@ include('funcoes.php');
 $mensagem = null;
 $tipo_mensagem = null;
 
-// filtros da busca
+// Filtros da busca
 // começa com 1=1 (sempre verdadeiro) pra poder ir colocando AND nos filtros
 $onde = "1=1";
 $parametros = [];

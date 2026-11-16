@@ -1,11 +1,10 @@
 <?php
-// funcoes.php
-// funções usadas em mais de uma página, pra não copiar o código toda hora
+// Funções usadas em mais de uma página, pra não copiar o código toda hora
 
 // pega o id do vídeo no link do YouTube
 // (serve pra validar o link do trailer)
 function pegarIdYoutube(string $link) {
-    // formatos de link do YouTube
+    // Formatos de link do YouTube
     $padroes = [
         '/youtube\.com\/watch\?v=([^\&\?\/]+)/',
         '/youtube\.com\/embed\/([^\&\?\/]+)/',
