@@ -5,7 +5,7 @@
 // Dados do banco (mudar conforme o computador de cada um)
 $servidor = "localhost";
 $usuario_bd = "root";
-$senha_bd = "94265221118";
+$senha_bd = "Senai@118";
 $nome_banco = "catalogo_filmes";
 
 // Criando a conexão com mysqli
