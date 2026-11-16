@@ -1,9 +1,6 @@
--- bd_teste.sql
--- banco só para TESTAR o sistema no Workbench (o bd.sql oficial é do grupo do banco)
--- como usar: abrir no MySQL Workbench e executar tudo (raio)
+-- Banco de dados para o catálogo de filmes - Versão teste
 
 CREATE DATABASE catalogo_filmes;
-
 USE catalogo_filmes;
 
 -- usuários do sistema
