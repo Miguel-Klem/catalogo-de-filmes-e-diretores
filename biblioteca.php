@@ -47,14 +47,14 @@ $generos = $conexao->query("SELECT DISTINCT genero FROM filmes WHERE genero != '
 if (isset($_GET['excluir_id'])) {
     $id = intval($_GET['excluir_id']);
 
-    $comando = $conexao->prepare("SELECT imagem_poster FROM filmes WHERE id = ?");
+    $comando = $conexao->prepare("SELECT poster_url FROM filmes WHERE id = ?");
     $comando->bind_param("i", $id);
     $comando->execute();
     $arquivo = $comando->get_result()->fetch_assoc();
     $comando->close();
 
-    if ($arquivo && !empty($arquivo['imagem_poster']) && file_exists($arquivo['imagem_poster'])) {
-        unlink($arquivo['imagem_poster']);
+    if ($arquivo && !empty($arquivo['poster_url']) && file_exists($arquivo['poster_url'])) {
+        unlink($arquivo['poster_url']);
     }
 
     $comando = $conexao->prepare("DELETE FROM filmes WHERE id = ?");
@@ -189,7 +189,7 @@ if (!empty($parametros)) {
                 <tr>
                     <th class="col-imagem">Pôster</th>
                     <th>Título</th>
-                    <th>Gênero • Ano</th>
+                    <th>Gênero • Ano / Estúdio</th>
                     <th>Diretor</th>
                     <th class="col-acoes">Ações</th>
                 </tr>
@@ -199,8 +199,8 @@ if (!empty($parametros)) {
                     <?php while ($linha = $filmes->fetch_assoc()): ?>
                         <tr>
                             <td>
-                                <?php if ($linha['imagem_poster']): ?>
-                                    <img src="<?php echo htmlspecialchars($linha['imagem_poster']); ?>"
+                                <?php if ($linha['poster_url']): ?>
+                                    <img src="<?php echo htmlspecialchars($linha['poster_url']); ?>"
                                          alt="Pôster" class="miniatura">
                                 <?php else: ?>
                                     <div class="sem-imagem">🎬</div>
@@ -209,14 +209,14 @@ if (!empty($parametros)) {
                             <td><?php echo htmlspecialchars($linha['titulo']); ?></td>
                             <td>
                                 <?php echo htmlspecialchars($linha['genero']) ?: '—'; ?>
-                                • <?php echo htmlspecialchars($linha['ano']) ?: '—'; ?>
+                                • <?php echo htmlspecialchars($linha['ano_estudio']) ?: '—'; ?>
                             </td>
                             <td><?php echo htmlspecialchars($linha['diretor_nome']); ?></td>
                             <td>
                                 <div class="botoes-acao">
                                     <?php
                                     // monta o link do trailer com o id do vídeo
-                                    $id_video = pegarIdYoutube($linha['trailer_link'] ?? '');
+                                    $id_video = pegarIdYoutube($linha['trailer_url'] ?? '');
                                     if ($id_video):
                                     ?>
                                         <!-- _blank abre em outra aba -->

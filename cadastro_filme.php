@@ -13,27 +13,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id = $_POST['id'] ?? '';
     $diretor_id = $_POST['diretor_id'] ?? '';
     $titulo = $_POST['titulo'] ?? '';
-    $ano = $_POST['ano'] ?? '';
+    $ano_estudio = $_POST['ano_estudio'] ?? '';
     $genero = $_POST['genero'] ?? '';
     $sinopse = $_POST['sinopse'] ?? '';
-    $trailer_link = $_POST['trailer_link'] ?? '';
-
-    // ano vazio vira NULL (a coluna é número e não aceita texto vazio)
-    if ($ano === '') {
-        $ano = null;
-    }
+    $trailer_url = $_POST['trailer_url'] ?? '';
 
     // valida o link do trailer
-    if (empty(pegarIdYoutube($trailer_link))) {
+    if (empty(pegarIdYoutube($trailer_url))) {
         $mensagem = "Insira um link válido do YouTube (ex: https://www.youtube.com/watch?v=...).";
         $classe = "erro";
     } else {
         // upload do pôster (se enviou)
-        $imagem_poster = "";
-        if (isset($_FILES['imagem_poster']) && $_FILES['imagem_poster']['error'] == 0) {
-            $upload = redimensionarESalvarImagem($_FILES['imagem_poster']);
+        $poster_url = "";
+        if (isset($_FILES['poster_url']) && $_FILES['poster_url']['error'] == 0) {
+            $upload = redimensionarESalvarImagem($_FILES['poster_url']);
             if (str_starts_with($upload, 'img/')) {
-                $imagem_poster = $upload;
+                $poster_url = $upload;
             } else {
                 $mensagem = $upload;
                 $classe = "erro";
@@ -43,11 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!isset($classe)) {
             if ($id) {
                 // editar (só troca o pôster se enviou um novo)
-                $sql = "UPDATE filmes SET diretor_id=?, titulo=?, ano=?, genero=?, sinopse=?, trailer_link=?";
-                $parametros = [$diretor_id, $titulo, $ano, $genero, $sinopse, $trailer_link];
-                if ($imagem_poster) {
-                    $sql .= ", imagem_poster=?";
-                    $parametros[] = $imagem_poster;
+                $sql = "UPDATE filmes SET diretor_id=?, titulo=?, ano_estudio=?, genero=?, sinopse=?, trailer_url=?";
+                $parametros = [$diretor_id, $titulo, $ano_estudio, $genero, $sinopse, $trailer_url];
+                if ($poster_url) {
+                    $sql .= ", poster_url=?";
+                    $parametros[] = $poster_url;
                 }
                 $sql .= " WHERE id=?";
                 $parametros[] = intval($id);
@@ -58,8 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $mensagem = "Filme atualizado com sucesso!";
             } else {
                 // cadastrar
-                $comando = $conexao->prepare("INSERT INTO filmes (diretor_id, titulo, ano, genero, sinopse, trailer_link, imagem_poster) VALUES (?,?,?,?,?,?,?)");
-                $comando->bind_param("sssssss", $diretor_id, $titulo, $ano, $genero, $sinopse, $trailer_link, $imagem_poster);
+                $comando = $conexao->prepare("INSERT INTO filmes (diretor_id, titulo, ano_estudio, genero, sinopse, trailer_url, poster_url) VALUES (?,?,?,?,?,?,?)");
+                $comando->bind_param("sssssss", $diretor_id, $titulo, $ano_estudio, $genero, $sinopse, $trailer_url, $poster_url);
                 $mensagem = "Filme cadastrado com sucesso!";
             }
 
@@ -78,15 +73,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 if (isset($_GET['excluir_id'])) {
     $id = intval($_GET['excluir_id']);
 
-    $comando = $conexao->prepare("SELECT imagem_poster FROM filmes WHERE id = ?");
+    $comando = $conexao->prepare("SELECT poster_url FROM filmes WHERE id = ?");
     $comando->bind_param("i", $id);
     $comando->execute();
     $arquivo = $comando->get_result()->fetch_assoc();
     $comando->close();
 
     // unlink apaga o arquivo da pasta img
-    if ($arquivo && !empty($arquivo['imagem_poster']) && file_exists($arquivo['imagem_poster'])) {
-        unlink($arquivo['imagem_poster']);
+    if ($arquivo && !empty($arquivo['poster_url']) && file_exists($arquivo['poster_url'])) {
+        unlink($arquivo['poster_url']);
     }
 
     $comando = $conexao->prepare("DELETE FROM filmes WHERE id = ?");
@@ -205,34 +200,34 @@ if ($diretor_id_filtro) {
             </div>
 
             <div class="grupo-campo">
-                <label for="ano">Ano de Lançamento</label>
-                <input type="number" id="ano" name="ano" min="1888" max="2100"
-                       value="<?php echo htmlspecialchars($filme['ano'] ?? ''); ?>"
-                       placeholder="Ex: 2014">
+                <label for="ano_estudio">Ano / Estúdio</label>
+                <input type="text" id="ano_estudio" name="ano_estudio"
+                       value="<?php echo htmlspecialchars($filme['ano_estudio'] ?? ''); ?>"
+                       placeholder="Ex: 2014 / Warner Bros.">
             </div>
 
             <div class="grupo-campo">
-                <label for="genero">Gênero</label>
+                <label for="genero">Gênero *</label>
                 <input type="text" id="genero" name="genero"
                        value="<?php echo htmlspecialchars($filme['genero'] ?? ''); ?>"
-                       placeholder="Ex: Ficção Científica">
+                       required placeholder="Ex: Ficção Científica">
             </div>
 
             <div class="grupo-campo">
-                <label for="trailer_link">Link do Trailer (YouTube) *</label>
-                <input type="text" id="trailer_link" name="trailer_link"
-                       value="<?php echo htmlspecialchars($filme['trailer_link'] ?? ''); ?>"
+                <label for="trailer_url">Link do Trailer (YouTube) *</label>
+                <input type="text" id="trailer_url" name="trailer_url"
+                       value="<?php echo htmlspecialchars($filme['trailer_url'] ?? ''); ?>"
                        required placeholder="https://www.youtube.com/watch?v=...">
             </div>
 
             <div class="grupo-campo">
-                <label for="imagem_poster">Pôster do Filme</label>
-                <input type="file" id="imagem_poster" name="imagem_poster" accept="image/*">
+                <label for="poster_url">Pôster do Filme</label>
+                <input type="file" id="poster_url" name="poster_url" accept="image/*">
                 <small>JPG ou PNG · Máximo 5 MB<?php echo $filme ? ' · Deixe vazio para manter o pôster atual' : ''; ?></small>
 
-                <?php if (!empty($filme['imagem_poster'])): ?>
+                <?php if (!empty($filme['poster_url'])): ?>
                     <div class="imagem-atual">
-                        <img src="<?php echo htmlspecialchars($filme['imagem_poster']); ?>" alt="Pôster atual">
+                        <img src="<?php echo htmlspecialchars($filme['poster_url']); ?>" alt="Pôster atual">
                         <small>Pôster atual</small>
                     </div>
                 <?php endif; ?>
@@ -265,7 +260,7 @@ if ($diretor_id_filtro) {
                 <tr>
                     <th class="col-imagem">Pôster</th>
                     <th>Título</th>
-                    <th>Gênero • Ano</th>
+                    <th>Gênero • Ano / Estúdio</th>
                     <th>Diretor</th>
                     <th class="col-acoes">Ações</th>
                 </tr>
@@ -275,8 +270,8 @@ if ($diretor_id_filtro) {
                     <?php while ($linha = $filmes->fetch_assoc()): ?>
                         <tr>
                             <td>
-                                <?php if ($linha['imagem_poster']): ?>
-                                    <img src="<?php echo htmlspecialchars($linha['imagem_poster']); ?>"
+                                <?php if ($linha['poster_url']): ?>
+                                    <img src="<?php echo htmlspecialchars($linha['poster_url']); ?>"
                                          alt="Pôster" class="miniatura">
                                 <?php else: ?>
                                     <div class="sem-imagem">🎬</div>
@@ -285,11 +280,20 @@ if ($diretor_id_filtro) {
                             <td><?php echo htmlspecialchars($linha['titulo']); ?></td>
                             <td>
                                 <?php echo htmlspecialchars($linha['genero']) ?: '—'; ?>
-                                • <?php echo htmlspecialchars($linha['ano']) ?: '—'; ?>
+                                • <?php echo htmlspecialchars($linha['ano_estudio']) ?: '—'; ?>
                             </td>
                             <td><?php echo htmlspecialchars($linha['diretor_nome']); ?></td>
                             <td>
                                 <div class="botoes-acao">
+                                    <?php
+                                    // monta o link do trailer com o id do vídeo
+                                    $id_video = pegarIdYoutube($linha['trailer_url'] ?? '');
+                                    if ($id_video):
+                                    ?>
+                                        <a href="https://www.youtube.com/watch?v=<?php echo $id_video; ?>"
+                                           target="_blank" rel="noopener noreferrer"
+                                           class="botao-trailer">▶ Trailer</a>
+                                    <?php endif; ?>
                                     <a href="?editar_id=<?php echo $linha['id']; ?>" class="botao-editar">✏️ Editar</a>
                                     <a href="?excluir_id=<?php echo $linha['id']; ?>"
                                        onclick="return confirm('Excluir <?php echo addslashes($linha['titulo']); ?>?')"

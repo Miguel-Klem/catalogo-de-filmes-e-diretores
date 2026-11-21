@@ -14,14 +14,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id = $_POST['id'] ?? '';
     $nome = $_POST['nome'] ?? '';
     $pais = $_POST['pais'] ?? '';
-    $genero = $_POST['genero'] ?? '';
+    $estilo = $_POST['estilo'] ?? '';
 
     // Se enviou foto, redimensiona e salva ela
-    $imagem = "";
+    $foto_url = "";
     if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == 0) {
         $upload = redimensionarESalvarImagem($_FILES['imagem']);
         if (str_starts_with($upload, 'img/')) {
-            $imagem = $upload;
+            $foto_url = $upload;
         } else {
             $mensagem = $upload; // Aqui $upload é a mensagem de erro
             $classe = "erro";
@@ -32,11 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($id) {
 
             // Editar (só troca a foto se enviou uma nova)
-            $sql = "UPDATE diretores SET nome=?, pais=?, genero=?";
-            $parametros = [$nome, $pais, $genero];
-            if ($imagem) {
-                $sql .= ", imagem=?";
-                $parametros[] = $imagem;
+            $sql = "UPDATE diretores SET nome=?, pais=?, estilo=?";
+            $parametros = [$nome, $pais, $estilo];
+            if ($foto_url) {
+                $sql .= ", foto_url=?";
+                $parametros[] = $foto_url;
             }
             $sql .= " WHERE id=?";
             $parametros[] = intval($id);
@@ -48,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $mensagem = "Diretor atualizado com sucesso!";
         } else {
             // Cadastrar
-            $comando = $conexao->prepare("INSERT INTO diretores (nome, pais, genero, imagem) VALUES (?,?,?,?)");
-            $comando->bind_param("ssss", $nome, $pais, $genero, $imagem);
+            $comando = $conexao->prepare("INSERT INTO diretores (nome, pais, estilo, foto_url) VALUES (?,?,?,?)");
+            $comando->bind_param("ssss", $nome, $pais, $estilo, $foto_url);
             $mensagem = "Diretor cadastrado com sucesso!";
         }
 
@@ -147,17 +147,17 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
             </div>
 
             <div class="grupo-campo">
-                <label for="pais">País</label>
+                <label for="pais">País *</label>
                 <input type="text" id="pais" name="pais"
                        value="<?php echo htmlspecialchars($diretor['pais'] ?? ''); ?>"
-                       placeholder="Ex: Reino Unido, Brasil...">
+                       required placeholder="Ex: Reino Unido, Brasil...">
             </div>
 
             <div class="grupo-campo">
-                <label for="genero">Gênero Principal</label>
-                <input type="text" id="genero" name="genero"
-                       value="<?php echo htmlspecialchars($diretor['genero'] ?? ''); ?>"
-                       placeholder="Ex: Ficção Científica, Drama...">
+                <label for="estilo">Estilo (gênero principal) *</label>
+                <input type="text" id="estilo" name="estilo"
+                       value="<?php echo htmlspecialchars($diretor['estilo'] ?? ''); ?>"
+                       required placeholder="Ex: Ficção Científica, Drama...">
             </div>
 
             <div class="grupo-campo">
@@ -165,9 +165,9 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
                 <input type="file" id="imagem" name="imagem" accept="image/*">
                 <small>JPG ou PNG · Máximo 5 MB<?php echo $diretor ? ' · Deixe vazio para manter a foto atual' : ''; ?></small>
 
-                <?php if (!empty($diretor['imagem'])): ?>
+                <?php if (!empty($diretor['foto_url'])): ?>
                     <div class="imagem-atual">
-                        <img src="<?php echo htmlspecialchars($diretor['imagem']); ?>" alt="Foto atual">
+                        <img src="<?php echo htmlspecialchars($diretor['foto_url']); ?>" alt="Foto atual">
                         <small>Foto atual</small>
                     </div>
                 <?php endif; ?>
@@ -195,7 +195,7 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
                     <th class="col-imagem">Foto</th>
                     <th>Nome</th>
                     <th>País</th>
-                    <th>Gênero Principal</th>
+                    <th>Estilo</th>
                     <th class="col-acoes">Ações</th>
                 </tr>
             </thead>
@@ -204,8 +204,8 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
                     <?php while ($linha = $diretores->fetch_assoc()): ?>
                         <tr>
                             <td>
-                                <?php if ($linha['imagem']): ?>
-                                    <img src="<?php echo htmlspecialchars($linha['imagem']); ?>"
+                                <?php if ($linha['foto_url']): ?>
+                                    <img src="<?php echo htmlspecialchars($linha['foto_url']); ?>"
                                          alt="<?php echo htmlspecialchars($linha['nome']); ?>"
                                          class="miniatura">
                                 <?php else: ?>
@@ -215,7 +215,7 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
                             </td>
                             <td><?php echo htmlspecialchars($linha['nome']); ?></td>
                             <td><?php echo htmlspecialchars($linha['pais']) ?: '—'; ?></td>
-                            <td><?php echo htmlspecialchars($linha['genero']) ?: '—'; ?></td>
+                            <td><?php echo htmlspecialchars($linha['estilo']) ?: '—'; ?></td>
                             <td>
                                 <div class="botoes-acao">
                                     <a href="?editar_id=<?php echo $linha['id']; ?>" class="botao-editar">✏️ Editar</a>
