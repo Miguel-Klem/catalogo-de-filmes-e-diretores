@@ -112,22 +112,20 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $diretor ? 'Editar Diretor' : 'Novo Diretor'; ?> - Cineflix</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><rect width=%27100%27 height=%27100%27 rx=%2718%27 fill=%27%23e50914%27/><text x=%2750%27 y=%2772%27 font-size=%2770%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27bold%27>C</text></svg>">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<?php $pagina_atual = 'diretores'; include('menu.php'); ?>
 <div class="conteudo">
 
     <div class="barra-pagina">
-        <h2><?php echo $diretor ? '✏️ Editar Diretor' : '🎥 Novo Diretor'; ?></h2>
-        <div class="acoes-topo">
-            <a href="index.php" class="botao-voltar">◀️ Voltar ao Menu</a>
-        </div>
+        <h2><?php echo $diretor ? 'Editar Diretor' : 'Novo Diretor'; ?></h2>
     </div>
 
     <?php if (isset($mensagem)): ?>
         <div class="mensagem <?php echo $classe; ?>">
-            <?php echo $classe === 'sucesso' ? '✅' : '⚠️'; ?> <?php echo $mensagem; ?>
+            <?php echo $mensagem; ?>
         </div>
     <?php endif; ?>
 
@@ -165,7 +163,7 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
                 <input type="file" id="imagem" name="imagem" accept="image/*">
                 <small>JPG ou PNG · Máximo 5 MB<?php echo $diretor ? ' · Deixe vazio para manter a foto atual' : ''; ?></small>
 
-                <?php if (!empty($diretor['foto_url'])): ?>
+                <?php if (!empty($diretor['foto_url']) && file_exists($diretor['foto_url'])): ?>
                     <div class="imagem-atual">
                         <img src="<?php echo htmlspecialchars($diretor['foto_url']); ?>" alt="Foto atual">
                         <small>Foto atual</small>
@@ -177,16 +175,16 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
 
         <div class="acoes-formulario">
             <button type="submit" class="botao-principal">
-                <?php echo $diretor ? '💾 Atualizar' : '➕ Cadastrar'; ?>
+                <?php echo $diretor ? 'Atualizar' : 'Cadastrar'; ?>
             </button>
             <?php if ($diretor): ?>
-                <a href="cadastro_diretor.php" class="botao-voltar">❌ Cancelar</a>
+                <a href="cadastro_diretor.php" class="botao-voltar">Cancelar</a>
             <?php endif; ?>
         </div>
     </form>
 
     <!-- Tabela de diretores -->
-    <h3>📋 Diretores Cadastrados</h3>
+    <h3>Diretores Cadastrados</h3>
 
     <div class="tabela-container">
         <table>
@@ -204,13 +202,13 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
                     <?php while ($linha = $diretores->fetch_assoc()): ?>
                         <tr>
                             <td>
-                                <?php if ($linha['foto_url']): ?>
+                                <?php if ($linha['foto_url'] && file_exists($linha['foto_url'])): ?>
                                     <img src="<?php echo htmlspecialchars($linha['foto_url']); ?>"
                                          alt="<?php echo htmlspecialchars($linha['nome']); ?>"
                                          class="miniatura">
                                 <?php else: ?>
                                     <!-- sem foto: mostra um emoji -->
-                                    <div class="sem-imagem">👤</div>
+                                    <div class="sem-imagem"></div>
                                 <?php endif; ?>
                             </td>
                             <td><?php echo htmlspecialchars($linha['nome']); ?></td>
@@ -218,12 +216,12 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
                             <td><?php echo htmlspecialchars($linha['estilo']) ?: '—'; ?></td>
                             <td>
                                 <div class="botoes-acao">
-                                    <a href="?editar_id=<?php echo $linha['id']; ?>" class="botao-editar">✏️ Editar</a>
+                                    <a href="?editar_id=<?php echo $linha['id']; ?>" class="botao-editar">Editar</a>
                                     <a href="?excluir_id=<?php echo $linha['id']; ?>"
                                        onclick="return confirm('Excluir <?php echo addslashes($linha['nome']); ?>?')"
-                                       class="botao-excluir">🗑️</a>
+                                       class="botao-excluir">Excluir</a>
                                     <a href="cadastro_filme.php?diretor_id=<?php echo $linha['id']; ?>"
-                                       class="botao-filmes">🎞️ Filmes</a>
+                                       class="botao-filmes">Filmes</a>
                                 </div>
                             </td>
                         </tr>
@@ -236,6 +234,6 @@ $diretores = $conexao->query("SELECT * FROM diretores ORDER BY nome");
     </div>
 
 </div>
-
+<?php include('rodape.php'); ?>
 </body>
 </html>

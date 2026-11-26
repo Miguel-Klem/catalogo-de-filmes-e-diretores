@@ -56,28 +56,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — Cineflix</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><rect width=%27100%27 height=%27100%27 rx=%2718%27 fill=%27%23e50914%27/><text x=%2750%27 y=%2772%27 font-size=%2770%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27bold%27>C</text></svg>">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="pagina-login">
 
     <div class="cartao-login">
         <div class="cabecalho-login">
-            <h1>🎬 CINEFLIX</h1>
+            <h1>CINEFLIX</h1>
             <p>Entre com suas credenciais</p>
         </div>
 
         <?php if ($mensagem): ?>
             <div class="mensagem <?php echo $tipo_mensagem; ?>">
-                ⚠️ <?php echo $mensagem; ?>
+                <?php echo $mensagem; ?>
             </div>
         <?php endif; ?>
 
         <?php if (isset($_GET['logout']) && $_GET['logout'] === 'sucesso'): ?>
-            <div class="mensagem sucesso">✅ Você saiu do sistema.</div>
+            <div class="mensagem sucesso">Você saiu do sistema.</div>
         <?php endif; ?>
 
         <!-- Os dados não aparecem na URL -->
+        <?php if (isset($_GET['cadastro']) && $_GET['cadastro'] === 'sucesso'): ?>
+            <div class="mensagem sucesso">Conta criada! Entre com seu usuário e senha.</div>
+        <?php endif; ?>
+
         <form method="post" action="">
             <div class="grupo-campo">
                 <label for="usuario">Usuário</label>
@@ -91,6 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <button type="submit" class="botao-principal">Entrar</button>
         </form>
+
+        <p class="dica-login">Ainda não tem conta? <a href="cadastro.php" class="link-destaque">Criar conta</a></p>
 
         <p class="dica-login">Teste: usuário <strong>admin</strong> / senha <strong>123</strong></p>
     </div>

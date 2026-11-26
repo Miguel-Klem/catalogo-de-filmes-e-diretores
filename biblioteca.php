@@ -1,6 +1,6 @@
 <?php
-
-// Lista todos os filmes com filtro por busca, diretor e gênero
+// biblioteca.php
+// lista todos os filmes em cartões, com filtros combináveis e ordenação
 include('valida_sessao.php');
 include('conexao.php');
 include('funcoes.php');
@@ -8,7 +8,38 @@ include('funcoes.php');
 $mensagem = null;
 $tipo_mensagem = null;
 
-// Filtros da busca
+// -----------------------------------------------
+// excluir (as avaliações e a lista do filme são apagadas antes)
+// -----------------------------------------------
+if (isset($_GET['excluir_id'])) {
+    $id = intval($_GET['excluir_id']);
+    excluirAvaliacoesEFavoritos($conexao, $id);
+
+    $comando = $conexao->prepare("SELECT poster_url FROM filmes WHERE id = ?");
+    $comando->bind_param("i", $id);
+    $comando->execute();
+    $arquivo = $comando->get_result()->fetch_assoc();
+    $comando->close();
+
+    if ($arquivo && !empty($arquivo['poster_url']) && file_exists($arquivo['poster_url'])) {
+        unlink($arquivo['poster_url']);
+    }
+
+    $comando = $conexao->prepare("DELETE FROM filmes WHERE id = ?");
+    $comando->bind_param("i", $id);
+    if ($comando->execute()) {
+        $tipo_mensagem = "sucesso";
+        $mensagem = "Filme excluído!";
+    } else {
+        $tipo_mensagem = "erro";
+        $mensagem = "Erro: " . $comando->error;
+    }
+    $comando->close();
+}
+
+// -----------------------------------------------
+// filtros da busca
+// -----------------------------------------------
 // começa com 1=1 (sempre verdadeiro) pra poder ir colocando AND nos filtros
 $onde = "1=1";
 $parametros = [];
@@ -34,68 +65,46 @@ if (!empty($_GET['busca'])) {
     $tipos .= "ss";
 }
 
-// guarda os filtros atuais pra não perder a busca ao excluir ou ver detalhes
+// ordenação: só aceita as opções da lista (não coloca o que vem da URL direto no SQL)
+$ordem = $_GET['ordem'] ?? 'titulo';
+switch ($ordem) {
+    case 'recentes':
+        $ordenar = "f.id DESC";
+        break;
+    case 'diretor':
+        $ordenar = "d.nome, f.titulo";
+        break;
+    default:
+        $ordem = 'titulo';
+        $ordenar = "f.titulo";
+}
+
+// guarda os filtros atuais pra não perder a busca ao excluir um filme
 $manter_filtros = "busca=" . urlencode($_GET['busca'] ?? '')
                 . "&diretor=" . urlencode($_GET['diretor'] ?? '')
-                . "&genero=" . urlencode($_GET['genero'] ?? '');
+                . "&genero=" . urlencode($_GET['genero'] ?? '')
+                . "&ordem=" . urlencode($ordem);
 
 // listas dos selects
 $diretores = $conexao->query("SELECT id, nome FROM diretores ORDER BY nome");
 $generos = $conexao->query("SELECT DISTINCT genero FROM filmes WHERE genero != '' ORDER BY genero");
 
-// excluir
-if (isset($_GET['excluir_id'])) {
-    $id = intval($_GET['excluir_id']);
-
-    $comando = $conexao->prepare("SELECT poster_url FROM filmes WHERE id = ?");
-    $comando->bind_param("i", $id);
-    $comando->execute();
-    $arquivo = $comando->get_result()->fetch_assoc();
-    $comando->close();
-
-    if ($arquivo && !empty($arquivo['poster_url']) && file_exists($arquivo['poster_url'])) {
-        unlink($arquivo['poster_url']);
-    }
-
-    $comando = $conexao->prepare("DELETE FROM filmes WHERE id = ?");
-    $comando->bind_param("i", $id);
-    if ($comando->execute()) {
-        $tipo_mensagem = "sucesso";
-        $mensagem = "Filme excluído!";
-    } else {
-        $tipo_mensagem = "erro";
-        $mensagem = "Erro: " . $comando->error;
-    }
-    $comando->close();
-}
-
-// detalhes do filme (sinopse)
-$detalhes = null;
-if (isset($_GET['detalhes_id'])) {
-    $detalhes_id = intval($_GET['detalhes_id']);
-    $comando = $conexao->prepare("SELECT f.*, d.nome AS diretor_nome FROM filmes f JOIN diretores d ON f.diretor_id = d.id WHERE f.id = ?");
-    $comando->bind_param("i", $detalhes_id);
-    $comando->execute();
-    $detalhes = $comando->get_result()->fetch_assoc();
-    $comando->close();
-}
-
+// -----------------------------------------------
 // consulta principal
+// -----------------------------------------------
 // o JOIN junta filmes com diretores pra pegar o nome do diretor
 $sql = "SELECT f.*, d.nome AS diretor_nome
         FROM filmes f
         JOIN diretores d ON f.diretor_id = d.id
         WHERE $onde
-        ORDER BY d.nome, f.titulo";
+        ORDER BY $ordenar";
 
 if (!empty($parametros)) {
-    // com filtros: consulta preparada
     $comando = $conexao->prepare($sql);
     $comando->bind_param($tipos, ...$parametros); // ... espalha o array
     $comando->execute();
     $filmes = $comando->get_result();
 } else {
-    // sem filtros: consulta simples
     $filmes = $conexao->query($sql);
 }
 ?>
@@ -105,24 +114,25 @@ if (!empty($parametros)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biblioteca de Filmes — Cineflix</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🎬</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><rect width=%27100%27 height=%27100%27 rx=%2718%27 fill=%27%23e50914%27/><text x=%2750%27 y=%2772%27 font-size=%2770%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27bold%27>C</text></svg>">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<?php $pagina_atual = 'biblioteca'; include('menu.php'); ?>
+
 <div class="conteudo">
 
     <div class="barra-pagina">
-        <h2>🍿 Biblioteca de Filmes</h2>
+        <h2>Biblioteca de Filmes</h2>
         <div class="acoes-topo">
-            <a href="index.php" class="botao-voltar">⬅ Voltar ao Menu</a>
-            <a href="cadastro_filme.php" class="botao-principal">➕ Novo Filme</a>
+            <a href="cadastro_filme.php" class="botao-principal">Novo Filme</a>
         </div>
     </div>
 
     <!-- filtros (get deixa a busca na URL) -->
     <div class="filtros">
         <form method="get" class="formulario-filtros">
-            <div class="grupo-filtros">
+            <div class="grupo-filtros quatro">
 
                 <div class="item-filtro">
                     <label for="busca">Busca geral</label>
@@ -157,11 +167,20 @@ if (!empty($parametros)) {
                     </select>
                 </div>
 
+                <div class="item-filtro">
+                    <label for="ordem">Ordenar por</label>
+                    <select name="ordem" id="ordem">
+                        <option value="titulo" <?php echo $ordem == 'titulo' ? 'selected' : ''; ?>>Título (A-Z)</option>
+                        <option value="recentes" <?php echo $ordem == 'recentes' ? 'selected' : ''; ?>>Mais recentes</option>
+                        <option value="diretor" <?php echo $ordem == 'diretor' ? 'selected' : ''; ?>>Diretor</option>
+                    </select>
+                </div>
+
             </div>
             <div class="acoes-filtros">
-                <button type="submit" class="botao-principal">🔍 Filtrar</button>
-                <?php if (!empty($_GET)): ?>
-                    <a href="biblioteca.php" class="botao-voltar">✖ Limpar</a>
+                <button type="submit" class="botao-principal">Filtrar</button>
+                <?php if (!empty($_GET['busca']) || !empty($_GET['diretor']) || !empty($_GET['genero'])): ?>
+                    <a href="biblioteca.php" class="botao-voltar">Limpar</a>
                 <?php endif; ?>
             </div>
         </form>
@@ -169,78 +188,37 @@ if (!empty($parametros)) {
 
     <?php if (isset($mensagem)): ?>
         <div class="mensagem <?php echo $tipo_mensagem; ?>">
-            <?php echo $tipo_mensagem === 'sucesso' ? '✅' : '⚠️'; ?> <?php echo $mensagem; ?>
+            <?php echo $mensagem; ?>
         </div>
     <?php endif; ?>
 
-    <?php if ($detalhes): ?>
-        <div class="caixa-sinopse">
-            <h3>🎬 <?php echo htmlspecialchars($detalhes['titulo']); ?></h3>
-            <p><strong>Diretor:</strong> <?php echo htmlspecialchars($detalhes['diretor_nome']); ?></p>
-            <p><strong>Sinopse:</strong> <?php echo htmlspecialchars($detalhes['sinopse']) ?: 'Sem sinopse cadastrada.'; ?></p>
-            <a href="biblioteca.php?<?php echo $manter_filtros; ?>" class="botao-voltar">✖ Fechar</a>
+    <p class="texto-suave"><?php echo $filmes->num_rows; ?> filme(s) encontrado(s)</p>
+
+    <?php if ($filmes->num_rows > 0): ?>
+        <div class="grade-filmes">
+            <?php while ($filme = $filmes->fetch_assoc()): ?>
+                <?php
+                // botões que aparecem embaixo de cada cartão
+                $botoes = '';
+                $id_video = pegarIdYoutube($filme['trailer_url'] ?? '');
+                if ($id_video) {
+                    $botoes .= '<a href="https://www.youtube.com/watch?v=' . $id_video . '" target="_blank" rel="noopener noreferrer" class="botao-trailer">Trailer</a>';
+                }
+                $botoes .= '<a href="cadastro_filme.php?editar_id=' . $filme['id'] . '" class="botao-editar">Editar</a>';
+                $botoes .= '<a href="?excluir_id=' . $filme['id'] . '&' . $manter_filtros . '" '
+                         . 'onclick="return confirm(\'Excluir ' . addslashes($filme['titulo']) . '?\')" class="botao-excluir">Excluir</a>';
+
+                mostrarCartaoFilme($conexao, $filme, $botoes);
+                ?>
+            <?php endwhile; ?>
+        </div>
+    <?php else: ?>
+        <div class="vazio">
+            <p>Nenhum filme encontrado.</p>
         </div>
     <?php endif; ?>
-
-    <!-- tabela de filmes -->
-    <div class="tabela-container">
-        <table>
-            <thead>
-                <tr>
-                    <th class="col-imagem">Pôster</th>
-                    <th>Título</th>
-                    <th>Gênero • Ano / Estúdio</th>
-                    <th>Diretor</th>
-                    <th class="col-acoes">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if ($filmes->num_rows > 0): ?>
-                    <?php while ($linha = $filmes->fetch_assoc()): ?>
-                        <tr>
-                            <td>
-                                <?php if ($linha['poster_url']): ?>
-                                    <img src="<?php echo htmlspecialchars($linha['poster_url']); ?>"
-                                         alt="Pôster" class="miniatura">
-                                <?php else: ?>
-                                    <div class="sem-imagem">🎬</div>
-                                <?php endif; ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($linha['titulo']); ?></td>
-                            <td>
-                                <?php echo htmlspecialchars($linha['genero']) ?: '—'; ?>
-                                • <?php echo htmlspecialchars($linha['ano_estudio']) ?: '—'; ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($linha['diretor_nome']); ?></td>
-                            <td>
-                                <div class="botoes-acao">
-                                    <?php
-                                    // monta o link do trailer com o id do vídeo
-                                    $id_video = pegarIdYoutube($linha['trailer_url'] ?? '');
-                                    if ($id_video):
-                                    ?>
-                                        <!-- _blank abre em outra aba -->
-                                        <a href="https://www.youtube.com/watch?v=<?php echo $id_video; ?>"
-                                           target="_blank" rel="noopener noreferrer"
-                                           class="botao-trailer">▶ Trailer</a>
-                                    <?php endif; ?>
-                                    <a href="?detalhes_id=<?php echo $linha['id']; ?>&<?php echo $manter_filtros; ?>"
-                                       class="botao-detalhes">📖 Detalhes</a>
-                                    <a href="cadastro_filme.php?editar_id=<?php echo $linha['id']; ?>" class="botao-editar">✏️ Editar</a>
-                                    <a href="?excluir_id=<?php echo $linha['id']; ?>&<?php echo $manter_filtros; ?>"
-                                       onclick="return confirm('Excluir <?php echo addslashes($linha['titulo']); ?>?')"
-                                       class="botao-excluir">🗑️</a>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr><td colspan="5" class="celula-vazia">Nenhum filme encontrado.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
 
 </div>
+<?php include('rodape.php'); ?>
 </body>
 </html>
